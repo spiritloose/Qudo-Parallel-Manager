@@ -22,6 +22,7 @@ sub new {
     my $admin_host            = delete $args{admin_host}            || '127.0.0.1';
     my $admin_port            = delete $args{admin_port}            || 90000;
     my $debug                 = delete $args{debug}                 || 0;
+    my $load                  = delete $args{load}                  || 0.5;
 
     my $qudo = Qudo->new(%args);
 
@@ -37,6 +38,7 @@ sub new {
         admin_host            => $admin_host,
         admin_port            => $admin_port,
         debug                 => $debug,
+        load                  => $load,
         qudo                  => $qudo,
     }, $class;
 
@@ -80,7 +82,7 @@ sub run {
             local $SIG{TERM} = sub { $reqs_before_exit = 0 };
 
             while ($reqs_before_exit > 0) {
-                if (throttle(0.5, sub { $manager->work_once })) {
+                if (throttle($self->{load}, sub { $manager->work_once })) {
                     $self->debug("WORK $$\n");
                     --$reqs_before_exit
                 } else {
